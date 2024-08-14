@@ -65,7 +65,7 @@ export const MinutesAmountInput = styled(BaseInput)`
 	width: 4rem;
 `
 
-export const CountDownContainer = styled.div`
+export const CountdownContainer = styled.div`
 	font-family: 'Roboto Mono', monospace;
 	font-size: 10rem;
 	line-height: 8rem;
