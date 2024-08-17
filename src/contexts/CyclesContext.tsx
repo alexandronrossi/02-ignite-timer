@@ -31,17 +31,47 @@ interface CyclesContextProviderProps {
 	children: ReactNode
 }
 
+interface CyclesState {
+	cycles: Cycle[]
+	activeCycleId: string | null
+}
+
 export function CyclesContextProvider({
 	children,
 }: CyclesContextProviderProps) {
-	const [cycles, dispatch] = useReducer((state: Cycle[], action: any) => {
-		if (action.type === 'ADD_NEW_CYCLE') {
-			return [...state, action.payload.newCycle]
-		}
-		return state
-	}, [])
-	const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
 	const [amountSecondsPassed, setAmountSecondsPassed] = useState<number>(0)
+
+	const [cyclesState, dispatch] = useReducer(
+		(state: CyclesState, action: any) => {
+			if (action.type === 'ADD_NEW_CYCLE') {
+				return {
+					...state,
+					cycles: [...state.cycles, action.payload.newCycle],
+					activeCycleId: action.payload.newCycle.id,
+				}
+			}
+
+			if (action.type === 'INTERRUPT_CURRENT_CYCLE') {
+				return {
+					...state,
+					cycles: state.cycles.map((cycle) => {
+						return cycle.id === state.activeCycleId
+							? { ...cycle, interruptedDate: new Date() }
+							: cycle
+					}),
+					activeCycleId: null,
+				}
+			}
+
+			return state
+		},
+		{
+			cycles: [],
+			activeCycleId: null,
+		},
+	)
+
+	const { cycles, activeCycleId } = cyclesState
 
 	const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 
@@ -56,13 +86,6 @@ export function CyclesContextProvider({
 				activeCycleId,
 			},
 		})
-		// setCycles((state) =>
-		// 	state.map((cycle) => {
-		// 		return cycle.id === activeCycleId
-		// 			? { ...cycle, finishedDate: new Date() }
-		// 			: cycle
-		// 	}),
-		// )
 	}
 
 	function createNewCycle(data: CreateCycleFormData) {
@@ -81,8 +104,7 @@ export function CyclesContextProvider({
 				newCycle,
 			},
 		})
-		// setCycles((state) => [...state, newCycle])
-		setActiveCycleId(id)
+
 		setAmountSecondsPassed(0)
 	}
 
@@ -93,16 +115,6 @@ export function CyclesContextProvider({
 				activeCycleId,
 			},
 		})
-
-		// setCycles((state) =>
-		// 	state.map((cycle) => {
-		// 		return cycle.id === activeCycleId
-		// 			? { ...cycle, interruptedDate: new Date() }
-		// 			: cycle
-		// 	}),
-		// )
-
-		setActiveCycleId(null)
 	}
 
 	return (
